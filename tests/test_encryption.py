@@ -4,13 +4,13 @@ import base64
 class TestEncryption():
     
     def test_encrypt_decrypt(self):
-        message = "Hello World Carlo"
+        message = "Hello World"
         result = encrypt(message)
         ciphertext = result["ciphertext"]
         nonce = result["nonce"]
 
         
         decrypted = decrypt(ciphertext, nonce)
-        self.assertEqual(decrypted, message)
+        assert decrypted == message, "Data does not match."
 
     

@@ -24,15 +24,18 @@ def encrypt(plaintext):
     aesgcm = AESGCM(decoded_aes_key)
     ciphertext = aesgcm.encrypt(nonce, plaintext, None)
 
-    encoded_ciphertext = base64.urlsafe_b64encode(ciphertext).decode('utf-8')
-    encoded_nonce = base64.urlsafe_b64encode(nonce).decode('utf-8')
+    encoded_ciphertext = base64.urlsafe_b64encode(ciphertext).decode('utf-8').rstrip("=")
+    encoded_nonce = base64.urlsafe_b64encode(nonce).decode('utf-8').rstrip("=")
 
-    return {"ciphertext": ciphertext, "nonce": nonce}
+    return {"ciphertext": encoded_ciphertext, "nonce": encoded_nonce}
 
 def decrypt(ciphertext, nonce):
 
-    ciphertext = base64.urlsafe_b64decode(ciphertext)
-    nonce = base64.urlsafe_b64decode(nonce)
+    ciphertext_pad = "=" * ((4 - len(ciphertext) % 4) % 4)
+    nonce_pad = "=" * ((4 - len(nonce) % 4) % 4)
+
+    ciphertext = base64.urlsafe_b64decode(ciphertext + ciphertext_pad)
+    nonce = base64.urlsafe_b64decode(nonce + nonce_pad)
 
     aes_key = os.getenv("AES_GCM_KEY")
     decoded_aes_key = base64.urlsafe_b64decode(aes_key)
@@ -44,15 +47,17 @@ def decrypt(ciphertext, nonce):
     return plaintext_bytes.decode('utf-8')
 
 
-"""
 if __name__ == '__main__':
-    plaintext = "hello"
-    encrypted_text, nonce = encrypt(plaintext)
-    print(encrypted_text, nonce)
+    plaintext = "Some random texts."
+    result = encrypt(plaintext)
+    ciphertext = result["ciphertext"]
+    nonce = result["nonce"]
+
+    print(f"ciphertext: {ciphertext},  nonce: , {nonce}")
     
-    decrypt = decrypt(encrypted_text, nonce)
+    decrypt = decrypt(ciphertext, nonce)
     print(decrypt)
-"""
+
 
 
 
