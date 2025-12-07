@@ -1,6 +1,6 @@
 import logging
 from flask import Flask, jsonify, request
-from encryption import encrypt as aes_encrypt, decrypt as aes_decrypt
+from crypto.aesgcm import encrypt as aesgcm_encrypt, decrypt as aesgcm_decrypt
 
 # Create flask app
 app = Flask(__name__)
@@ -24,7 +24,7 @@ def encrypt_message():
         return jsonify({"error": "No message provided"}), 400
 
     plaintext = data.get("message")
-    ciphertext = aes_encrypt(plaintext)
+    ciphertext = aesgcm_encrypt(plaintext)
     logging.info(f"[API][ENCRYPTION] Encrypted message successfully")
     return jsonify({"encrypted": ciphertext})
 
@@ -41,7 +41,7 @@ def decrypt_message():
     ciphertext = data.get("ciphertext")
     nonce = data.get("nonce")
 
-    plaintext = aes_decrypt(ciphertext, nonce)
+    plaintext = aesgcm_decrypt(ciphertext, nonce)
     logging.info(f"[API][DECRYPTION] Decrypted message successfully")
     return jsonify({"decrypted": plaintext})
 

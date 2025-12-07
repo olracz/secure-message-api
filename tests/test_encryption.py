@@ -1,4 +1,4 @@
-from encryption import encrypt, decrypt
+from aesgcm import encrypt, decrypt
 import base64
 
 class TestEncryption():
