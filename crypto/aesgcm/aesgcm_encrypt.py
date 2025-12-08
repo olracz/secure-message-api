@@ -1,5 +1,5 @@
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from crypto.utils import generate_nonce, b64_encode
+from crypto.utils import generate_nonce, b64_encode, b64_decode
 import os 
 import base64
 from dotenv import load_dotenv
