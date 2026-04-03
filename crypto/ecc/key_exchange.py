@@ -1,37 +1,15 @@
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives import hashes
 
-def generate_rsa_keypair():
-    # Generate RSA public and private key
+def derive_shared_aes_key(my_private_key, peer_public_key):
+    # Perform ECDH
+    shared_secret = my_private_key.exchange(ec.ECDH(), peer_public_key)
 
-    private_key = rsa.generate_private_key(
-        public_exponent = 65537,
-        key_size=2048
-    )
-
-    public_key = private_key.public_key()
-
-    return private_key, public_key
-
-def save_private_key(private_key, path: str):
-    # Save private key in PEM file
-
-    pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
-    )
-    
-    with open(path, "wb") as f:
-        f.write(pem)
-
-def save_public_key(public_key, path: str):
-    # Save public key in PEM file
-
-    pem = public_key.public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
-    )
-
-    with open(path, "wb") as f:
-        f.write(pem)
+    # Derivation (HKDF) to get a clean 256-bit AES key
+    return HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b'secure-message-api-v1',
+    ).derive(shared_secret)

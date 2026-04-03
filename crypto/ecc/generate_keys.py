@@ -1,10 +1,23 @@
-from crypto.rsa.key_pair import generate_rsa_keypair, save_private_key, save_public_key
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import serialization
 
-private_key, public_key = generate_rsa_keypair()
+# Generate a private key for use in the exchange.
+private_key = ec.generate_private_key(ec.SECP256R1())
 
-# Run this code only when rotating RSA public and private keys
+# Serialize the private key to PEM format and save it to a file.
+with open("keys/privatekey.pem", "wb") as f:
+    f.write(private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    ))
 
-save_private_key(private_key, "private_key.pem")
-save_public_key(public_key, "public_key.pem")
+# Derive the public key from the private key and save it to a file.
+public_key = private_key.public_key()
+with open("keys/publickey.pem", "wb") as f:
+    f.write(public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    ))    
 
-print("Keys generated successfully!")
+print("ECC P-256 keys generated successfully in /keys folder.")
