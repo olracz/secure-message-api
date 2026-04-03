@@ -8,11 +8,13 @@ The project has successfully implemented the **Symmetric Encryption** engine. It
 * **AES-256-GCM Core:** Implemented high-performance authenticated encryption.
 * **Flask API Layer:** Endpoints for `/encrypt` and `/decrypt` are functional and tested via Postman.
 * **Modular Design:** Clear separation between cryptographic primitives and API routing.
-* **Unit Testing:** Pytest suite integrated to verify encryption/decryption cycles.
+* **Unit Testing:** Pytest suite integrated to verify core cryptographic cycles and key loading.
+* **Modern Identity Foundation**: Migrated from RSA to ECC (NIST P-256) for faster, more secure identity management.
 
 ### 🛠 In Development (Roadmap)
-* **ECC Handshake (P-256):** Transitioning from static keys to dynamic **ECDH** key exchange.
-* **HKDF Integration:** Implementing HMAC-based Key Derivation to securely bridge ECC secrets with AES keys.
+* **ECC Handshake Protocol:** Implementing a Challenge-Response mechanism in handshake.py to verify user identity before key exchange.
+* **Dynamic Key Exchange (ECDH):** Replacing static AES keys with secrets derived dynamically per session
+* **Mutual Authentication:** Ensuring the Flask API signs responses so clients can verify the server's identity.
 * **Public Key Infrastructure:** Developing a local database schema to manage user public keys.
 
 ---
