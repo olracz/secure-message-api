@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives import serialization
 private_key = ec.generate_private_key(ec.SECP256R1())
 
 # Serialize the private key to PEM format and save it to a file.
-with open("keys/privatekey.pem", "wb") as f:
+with open("keys/private_key.pem", "wb") as f:
     f.write(private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
@@ -14,7 +14,7 @@ with open("keys/privatekey.pem", "wb") as f:
 
 # Derive the public key from the private key and save it to a file.
 public_key = private_key.public_key()
-with open("keys/publickey.pem", "wb") as f:
+with open("keys/public_key.pem", "wb") as f:
     f.write(public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
