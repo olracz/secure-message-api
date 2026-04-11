@@ -1,23 +1,44 @@
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
 
-# Generate a private key for use in the exchange.
-private_key = ec.generate_private_key(ec.SECP256R1())
+def generate_key_pair():
+    # Generate an ECC P-256 key pair
+    private_key = ec.generate_private_key(ec.SECP256R1())
+    public_key = private_key.public_key()
+    return private_key, public_key
 
-# Serialize the private key to PEM format and save it to a file.
-with open("keys/private_key.pem", "wb") as f:
-    f.write(private_key.private_bytes(
+def private_key_to_pem(private_key):
+    # Convert private key to PEM format for storage or transmission
+    return private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
-    ))
-
-# Derive the public key from the private key and save it to a file.
-public_key = private_key.public_key()
-with open("keys/public_key.pem", "wb") as f:
-    f.write(public_key.public_bytes(
+    )
+def public_key_to_pem(public_key):
+    # Convert public key to PEM format for storage or transmission
+    return public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
-    ))    
+    )
 
-print("ECC P-256 keys generated successfully in /keys folder.")
+def pem_to_key(private_pem=None, public_pem=None):
+    # Convert PEM back to key objects
+    private_key = None
+    public_key = None
+
+    if private_pem:
+        private_key = serialization.load_pem_private_key(
+            private_pem,
+            password=None
+        )
+
+    if public_pem:
+        public_key = serialization.load_pem_public_key(public_pem)
+
+    return private_key, public_key   
+
+
+def save_key_to_file(pem_data, filename):
+    # Save the PEM data to a file
+    with open(filename, "wb") as f:
+        f.write(pem_data)
