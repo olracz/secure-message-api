@@ -1,37 +1,49 @@
-# 🔐 EncryptiChat: Hybrid Messaging Security API
-A high-integrity backend service built with Python and Flask, focusing on authenticated encryption and secure key exchange.
+🛡️ Secure-Message-API (E2EE)
+A Python-based, End-to-End Encrypted (E2EE) messaging framework utilizing Elliptic Curve Cryptography (ECC) and Authenticated Encryption (AES-GCM).
 
-## 🚀 Project Status: [BETA] Symmetric Core Operational
-The project has successfully implemented the **Symmetric Encryption** engine. It is currently capable of encrypting and decrypting data using industry-standard authenticated ciphers via a RESTful API.
+🚀 Current Status: Phase 1 Complete
+I have successfully implemented the Persistent Identity Layer. The system can now generate, store, and manage long-term cryptographic "passports" for clients.
 
-### ✅ Completed & Functional
-* **AES-256-GCM Core:** Implemented high-performance authenticated encryption.
-* **Flask API Layer:** Endpoints for `/encrypt` and `/decrypt` are functional and tested via Postman.
-* **Modular Design:** Clear separation between cryptographic primitives and API routing.
-* **Unit Testing:** Pytest suite integrated to verify core cryptographic cycles and key loading.
-* **Modern Identity Foundation**: Migrated from RSA to ECC (NIST P-256) for faster, more secure identity management.
+Key Milestones:
+Identity Management: Completed initial_client_identity logic.
 
-### 🛠 In Development (Roadmap)
-* **ECC Handshake Protocol:** Implementing a Challenge-Response mechanism in handshake.py to verify user identity before key exchange.
-* **Dynamic Key Exchange (ECDH):** Replacing static AES keys with secrets derived dynamically per session
-* **Mutual Authentication:** Ensuring the Flask API signs responses so clients can verify the server's identity.
-* **Public Key Infrastructure:** Developing a local database schema to manage user public keys.
+Automatic generation of P-256 ECC key pairs.
 
----
+Secure persistence of Private Keys via .pem files.
 
-## 🏗 Cryptographic Details
+Cryptographic Primitives:
 
-### Authenticated Encryption (AES-GCM)
-I chose **AES-GCM (Galois/Counter Mode)** because it provides **AEAD** (Authenticated Encryption with Associated Data). Unlike older modes (CBC/ECB), GCM ensures:
-* **Confidentiality:** The message is encrypted.
-* **Authenticity:** A 16-byte tag ensures the data hasn't been tampered with in transit.
+ECDH: For shared secret agreement.
 
-### File Structure
-```text
-├── api/             # Flask routes and request handling
-├── crypto/          
-│   ├── aesgcm/      # AES-256-GCM core implementation
-│   ├── ecc          # ECC logic
-│   └── utils/       # Encoding (Base64) and Randomness (os.urandom)
-├── tests/           # Automated test suite
-└── keys/            # Local storage for key material
+ECDSA: For identity verification and message signing.
+
+HKDF: For deriving high-entropy AES keys.
+
+AES-GCM: For authenticated encryption of message payloads.
+
+🏗️ Technical Architecture
+1. Identity & Authentication (The Signal Model)
+Instead of traditional real-time challenge-response, this system is transitioning toward an Asynchronous Handshake using:
+
+Identity Keys: Permanent P-256 keys stored on the client.
+
+Pre-Signed Keys: The client signs a temporary key and uploads it to the server. This allows peers to establish an E2EE session even when the recipient is offline.
+
+2. End-to-End Encryption (E2EE)
+Zero-Knowledge Server: The backend acts purely as a relay. It never sees raw message content or the derived session keys.
+
+Forward Secrecy: Every session utilizes ephemeral keys, ensuring that even if an identity key is compromised in the future, past conversations remain secure.
+
+📂 Project Structure
+crypto/crypto_service.py: The high-level orchestrator (Service Layer).
+
+crypto/ecc/: Core logic for key_exchange, signatures, and generate_keys.
+
+crypto/aesgcm/: Implementation of encrypt and decrypt workers.
+
+🛠️ Next Steps
+Implement Pre-Signed Key Logic: Allow clients to upload signed bundles to the server.
+
+Session Orchestration: Finalize the CryptoService functions to handle peer key retrieval.
+
+Flask API Integration: Build the endpoints to relay encrypted "envelopes" between clients.
