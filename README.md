@@ -1,49 +1,108 @@
-🛡️ Secure-Message-API (E2EE)
-A Python-based, End-to-End Encrypted (E2EE) messaging framework utilizing Elliptic Curve Cryptography (ECC) and Authenticated Encryption (AES-GCM).
+# 🛡️ Secure-Message-API (E2EE)
 
-🚀 Current Status: Phase 1 Complete
-I have successfully implemented the Persistent Identity Layer. The system can now generate, store, and manage long-term cryptographic "passports" for clients.
+A Python-based End-to-End Encrypted (E2EE) messaging framework utilizing Elliptic Curve Cryptography (ECC) and AES-GCM authenticated encryption.
 
-Key Milestones:
-Identity Management: Completed initial_client_identity logic.
+---
 
-Automatic generation of P-256 ECC key pairs.
+# 🚀 Current Status: Phase 1 — Identity Layer Implemented
 
-Secure persistence of Private Keys via .pem files.
+The project currently implements the foundational cryptographic identity layer required for asynchronous secure messaging systems.
 
-Cryptographic Primitives:
+## ✅ Implemented Features
 
-ECDH: For shared secret agreement.
+### 🔑 Persistent Identity Management
+- Automatic generation of long-term ECC P-256 identity key pairs
+- Persistent `.pem` key storage
+- Automatic loading of existing identity keys
+- Separation of:
+  - key generation
+  - serialization
+  - storage
+  - orchestration logic
 
-ECDSA: For identity verification and message signing.
+### 🔐 Cryptographic Primitives
+- ECC (P-256)
+- ECDSA signatures
+- ECDH shared secret derivation
+- HKDF key derivation
+- AES-GCM authenticated encryption
 
-HKDF: For deriving high-entropy AES keys.
+### 🧪 Testing
+- Identity key generation tests
+- Key persistence tests
+- Existing key loading tests using `pytest`
 
-AES-GCM: For authenticated encryption of message payloads.
+---
 
-🏗️ Technical Architecture
-1. Identity & Authentication (The Signal Model)
-Instead of traditional real-time challenge-response, this system is transitioning toward an Asynchronous Handshake using:
+# 🏗️ Current Architecture
 
-Identity Keys: Permanent P-256 keys stored on the client.
+## Crypto Service Layer
+`crypto/crypto_service.py`
+- High-level orchestration layer
+- Manages identity initialization and future protocol workflows
 
-Pre-Signed Keys: The client signs a temporary key and uploads it to the server. This allows peers to establish an E2EE session even when the recipient is offline.
+## ECC Module Structure
+`crypto/ecc/`
 
-2. End-to-End Encryption (E2EE)
-Zero-Knowledge Server: The backend acts purely as a relay. It never sees raw message content or the derived session keys.
+Current modules:
+- `identity_keys.py`
+- `serialization.py`
+- `signatures.py`
+- `key_generation.py`
 
-Forward Secrecy: Every session utilizes ephemeral keys, ensuring that even if an identity key is compromised in the future, past conversations remain secure.
+Planned modules:
+- `pre_keys.py`
+- `storage.py`
+- `key_exchange.py`
 
-📂 Project Structure
-crypto/crypto_service.py: The high-level orchestrator (Service Layer).
+## AES-GCM Module
+`crypto/aesgcm/`
+- Encryption worker
+- Decryption worker
 
-crypto/ecc/: Core logic for key_exchange, signatures, and generate_keys.
+---
 
-crypto/aesgcm/: Implementation of encrypt and decrypt workers.
+# 🔐 Protocol Direction
 
-🛠️ Next Steps
-Implement Pre-Signed Key Logic: Allow clients to upload signed bundles to the server.
+This project is being designed toward an asynchronous E2EE architecture inspired by modern secure messaging systems such as Signal.
 
-Session Orchestration: Finalize the CryptoService functions to handle peer key retrieval.
+Planned protocol components include:
+- Identity Keys
+- Signed Pre Keys (SPK)
+- One-Time Pre Keys (OTK)
+- Asynchronous session establishment
+- Forward secrecy
 
-Flask API Integration: Build the endpoints to relay encrypted "envelopes" between clients.
+---
+
+# 📌 Current Development Focus
+
+## In Progress
+- Pre-key management architecture
+- PEM storage abstraction layer
+- Signed Pre-Key generation workflow
+
+## Planned
+- Pre-key bundle orchestration
+- Session establishment workflow
+- Client-to-client encrypted handshake
+- Flask API integration
+- Encrypted envelope relay system
+
+---
+
+# 🧠 Security Goals
+
+- Zero-knowledge server architecture
+- End-to-end encrypted communication
+- Forward secrecy through ephemeral session keys
+- Persistent client identity verification
+
+---
+
+# 🛠️ Tech Stack
+
+- Python
+- cryptography
+- pytest
+- Flask (planned)
