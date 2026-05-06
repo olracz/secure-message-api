@@ -14,18 +14,8 @@ def public_key_to_pem(public_key):
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
 
-def pem_to_key(private_pem=None, public_pem=None):
-    # Convert PEM back to key objects
-    private_key = None
-    public_key = None
-
-    if private_pem:
-        private_key = serialization.load_pem_private_key(
-            private_pem,
-            password=None
-        )
-
-    if public_pem:
-        public_key = serialization.load_pem_public_key(public_pem)
-
-    return private_key, public_key 
+def pem_to_key(pem_data, private=True):
+    if private:
+        return serialization.load_pem_private_key(pem_data, password=None)
+    else:
+        return serialization.load_pem_public_key(pem_data)
