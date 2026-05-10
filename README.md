@@ -48,7 +48,7 @@ The project now implements the pre-key management layer on top of the identity l
 - Existing key loading tests
 - AES-GCM encryption/decryption tests
 - Tampered ciphertext detection tests
-- Pre-key tests *(in progress)*
+- Pre-key tests
 
 ---
 
