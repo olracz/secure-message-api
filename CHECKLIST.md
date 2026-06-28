@@ -14,12 +14,12 @@
 - [x] test_pre_keys.py — full SPK and OTK test coverage
 
 ## Phase 3 — Service Orchestration
-- [ ] crypto_service.py — initialize_identity()
-- [ ] crypto_service.py — initialize_pre_keys()
-- [ ] crypto_service.py — get_available_otks()
-- [ ] crypto_service.py — consume_otk(otk_id)
-- [ ] crypto_service.py — replenish_otks()
-- [ ] test_crypto_service.py — update with new function tests
+- [x] crypto_service.py — initialize_identity()
+- [x] crypto_service.py — initialize_pre_keys()
+- [x] crypto_service.py — get_available_otks()
+- [x] crypto_service.py — consume_otk(otk_id)
+- [x] crypto_service.py — replenish_otks()
+- [x] test_crypto_service.py — update with new function tests
 
 ## Phase 4 — X3DH Handshake
 - [ ] key_exchange.py — perform_ecdh()
