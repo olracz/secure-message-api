@@ -16,13 +16,13 @@ class TestAESGCM:
         """Uses custom b64_decode to handle the unpadded string."""
         result = encrypt("Top Secret")
         
-        # Decode using YOUR utility
+        # Decode using utility
         ciphertext_bytes = bytearray(b64_decode(result["ciphertext"]))
         
         # Tamper with the first byte
         ciphertext_bytes[0] ^= 0xFF 
         
-        # Re-encode using YOUR utility
+        # Re-encode using utility
         bad_data = b64_encode(bytes(ciphertext_bytes))
 
         with pytest.raises(InvalidTag):
