@@ -22,13 +22,13 @@
 - [x] test_crypto_service.py — update with new function tests
 
 ## Phase 4 — X3DH Handshake
-- [ ] key_exchange.py — perform_ecdh()
-- [ ] key_exchange.py — derive_x3dh_master_secret()
-- [ ] handshake.py — verify_spk_signature()
-- [ ] handshake.py — x3dh_sender()
-- [ ] handshake.py — x3dh_receiver()
-- [ ] test_key_exchange.py
-- [ ] test_handshake.py
+- [x] key_exchange.py — perform_ecdh()
+- [x] key_exchange.py — derive_x3dh_master_secret()
+- [x] handshake.py — verify_spk_signature()
+- [x] handshake.py — x3dh_sender()
+- [x] handshake.py — x3dh_receiver()
+- [x] test_handshake.py
+- [x] test_key_exchange.py
 
 ## Phase 5 — Double Ratchet
 - [ ] ratchet.py — ratchet state initialization from master secret

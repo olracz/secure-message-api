@@ -3,9 +3,9 @@ A Python-based End-to-End Encrypted (E2EE) messaging framework utilizing Ellipti
 
 ---
 
-# 🚀 Current Status: Phase 2 — Pre-Key Layer Implemented
+# 🚀 Current Status: Phase 4 — X3DH Handshake Implemented
 
-The project now implements the pre-key management layer on top of the identity layer, moving toward full asynchronous session establishment.
+The project now implements the full X3DH key agreement protocol, enabling asynchronous session establishment between two parties without requiring both to be online simultaneously.
 
 ---
 
@@ -35,6 +35,22 @@ The project now implements the pre-key management layer on top of the identity l
   - Directory scanning for available OTK discovery
   - Hard deletion after use — enforces forward secrecy at the filesystem level
 
+### 🔧 Service Orchestration
+- `initialize_identity()` — load or create identity keys on startup
+- `initialize_pre_keys()` — generate, sign, and store SPK + OTK batch
+- `get_available_otks()` — check remaining OTK pool
+- `consume_otk(otk_id)` — hard delete after session use with auto-replenishment
+- `replenish_otks()` — manual OTK pool top up
+- `sign_authentication_proof()` — ECDSA challenge signing for server authentication
+- `verify_authentication_proof()` — signature verification
+
+### 🤝 X3DH Key Agreement
+- `perform_ecdh()` — single raw ECDH primitive, reused for all DH1-DH4 operations
+- `derive_x3dh_master_secret()` — HKDF-SHA256 over 3-4 combined DH outputs → 32-byte root key
+- `x3dh_sender()` — initiator side, generates ephemeral key pair and performs 3-4 DH operations
+- `x3dh_receiver()` — responder side, mirrors sender DH operations in reverse using published keys
+- `verify_spk_signature()` — validates pre-key bundle authenticity before trusting it
+
 ### 🔐 Cryptographic Primitives
 - ECC (P-256)
 - ECDSA signatures
@@ -43,12 +59,11 @@ The project now implements the pre-key management layer on top of the identity l
 - AES-GCM authenticated encryption
 
 ### 🧪 Testing
-- Identity key generation tests
-- Key persistence tests
-- Existing key loading tests
-- AES-GCM encryption/decryption tests
-- Tampered ciphertext detection tests
-- Pre-key tests
+- Identity key generation, persistence, and loading tests
+- AES-GCM encryption/decryption and tamper detection tests
+- SPK and OTK generation, storage, loading, and deletion tests
+- CryptoService orchestration layer tests
+- X3DH key exchange and handshake tests
 
 ---
 
@@ -57,7 +72,7 @@ The project now implements the pre-key management layer on top of the identity l
 ## Crypto Service Layer
 `crypto/crypto_service.py`
 - High-level orchestration layer
-- Manages identity initialization and future protocol workflows
+- Manages identity initialization, pre-key lifecycle, and authentication
 
 ## ECC Module Structure
 `crypto/ecc/`
@@ -86,7 +101,7 @@ Planned protocol components include:
 - ✅ Identity Keys
 - ✅ Signed Pre Keys (SPK)
 - ✅ One-Time Pre Keys (OTK)
-- X3DH (Extended Triple Diffie-Hellman) key agreement
+- ✅ X3DH key agreement
 - Double Ratchet Algorithm
   - Diffie-Hellman ratchet (forward secrecy)
   - Symmetric-key ratchet (break-in recovery)
@@ -98,14 +113,11 @@ Planned protocol components include:
 # 📌 Current Development Focus
 
 ## In Progress
-- Pre-key test coverage
-- Pre-key bundle orchestration via `crypto_service.py`
+
 
 ## Planned
-- X3DH initial key agreement
-- Double Ratchet session management
-- Client-to-client encrypted handshake
-- Flask API integration
+- Double Ratchet session management (`ratchet.py`)
+- Client-to-client encrypted handshake via Flask
 - Encrypted envelope relay system
 
 ---
