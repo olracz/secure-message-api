@@ -3,9 +3,9 @@ A Python-based End-to-End Encrypted (E2EE) messaging framework utilizing Ellipti
 
 ---
 
-# 🚀 Current Status: Phase 4 — X3DH Handshake Implemented
+# 🚀 Current Status: Phase 5 — Double Ratchet Implemented
 
-The project now implements the full X3DH key agreement protocol, enabling asynchronous session establishment between two parties without requiring both to be online simultaneously.
+The project now implements the Double Ratchet Algorithm on top of the X3DH handshake, enabling fully encrypted conversations with forward secrecy, break-in recovery, and out-of-order message handling.
 
 ---
 
@@ -51,6 +51,15 @@ The project now implements the full X3DH key agreement protocol, enabling asynch
 - `x3dh_receiver()` — responder side, mirrors sender DH operations in reverse using published keys
 - `verify_spk_signature()` — validates pre-key bundle authenticity before trusting it
 
+### 🔄 Double Ratchet Algorithm
+- `kdf_chain_key()` — symmetric-key ratchet via HMAC-SHA256, advances every message
+- `kdf_root_key()` — DH ratchet via HKDF-SHA256, advances every round trip
+- `RatchetState` — full session state for both initiator and responder
+- `ratchet_encrypt()` — derives message key, encrypts via AES-GCM, advances sending chain
+- `ratchet_decrypt()` — detects DH ratchet step, derives message key, decrypts via AES-GCM
+- `skip_message_keys()` — caches skipped message keys for out-of-order delivery
+- `try_skipped_message_keys()` — recovers cached keys before advancing ratchet state
+
 ### 🔐 Cryptographic Primitives
 - ECC (P-256)
 - ECDSA signatures
@@ -64,7 +73,8 @@ The project now implements the full X3DH key agreement protocol, enabling asynch
 - SPK and OTK generation, storage, loading, and deletion tests
 - CryptoService orchestration layer tests
 - X3DH key exchange and handshake tests
-
+- Double Ratchet symmetric and DH ratchet tests
+- Out-of-order message handling and skipped key cache tests
 ---
 
 # 🏗️ Current Architecture
@@ -102,7 +112,7 @@ Planned protocol components include:
 - ✅ Signed Pre Keys (SPK)
 - ✅ One-Time Pre Keys (OTK)
 - ✅ X3DH key agreement
-- Double Ratchet Algorithm
+- ✅ Double Ratchet Algorithm
   - Diffie-Hellman ratchet (forward secrecy)
   - Symmetric-key ratchet (break-in recovery)
 - Asynchronous session establishment
@@ -112,11 +122,11 @@ Planned protocol components include:
 
 # 📌 Current Development Focus
 
+
 ## In Progress
 
 
 ## Planned
-- Double Ratchet session management (`ratchet.py`)
 - Client-to-client encrypted handshake via Flask
 - Encrypted envelope relay system
 

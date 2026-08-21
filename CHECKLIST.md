@@ -31,12 +31,12 @@
 - [x] test_key_exchange.py
 
 ## Phase 5 — Double Ratchet
-- [ ] ratchet.py — ratchet state initialization from master secret
-- [ ] ratchet.py — symmetric key ratchet (per message)
-- [ ] ratchet.py — DH ratchet (per round trip)
-- [ ] ratchet.py — encrypt message with ratchet
-- [ ] ratchet.py — decrypt message with ratchet
-- [ ] test_ratchet.py
+- [x] ratchet.py — ratchet state initialization from master secret
+- [x] ratchet.py — symmetric key ratchet (per message)
+- [x] ratchet.py — DH ratchet (per round trip)
+- [x] ratchet.py — encrypt message with ratchet
+- [x] ratchet.py — decrypt message with ratchet
+- [x] test_ratchet.py
 
 ## Phase 6 — Flask API
 - [ ] server — pre-key bundle upload endpoint
@@ -46,7 +46,6 @@
 - [ ] test_api.py
 
 ## Phase 7 — Polish
-- [ ] Remove utils/key_loader.py (obsolete RSA loader) ← do this now
 - [ ] Update README after each phase
 - [ ] Review zero-knowledge server architecture
 - [ ] Security audit of full protocol flow
