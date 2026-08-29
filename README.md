@@ -59,6 +59,12 @@ The project now implements the Double Ratchet Algorithm on top of the X3DH hands
 - `ratchet_decrypt()` — detects DH ratchet step, derives message key, decrypts via AES-GCM
 - `skip_message_keys()` — caches skipped message keys for out-of-order delivery
 - `try_skipped_message_keys()` — recovers cached keys before advancing ratchet state
+- `MAX_SKIP = 100` — hard limit on skippable messages per chain
+
+### 🧩 Session Orchestration
+- `session_manager.py` — bridges X3DH handshake and Double Ratchet:
+  performs the one-time handshake setup and hands back a ready-to-use
+  RatchetState for the conversation
 
 ### 🔐 Cryptographic Primitives
 - ECC (P-256)
@@ -84,6 +90,19 @@ The project now implements the Double Ratchet Algorithm on top of the X3DH hands
 - High-level orchestration layer
 - Manages identity initialization, pre-key lifecycle, and authentication
 
+## Session Manager Layer
+`crypto/session_manager.py`
+- Orchestrates X3DH handshake + Double Ratchet initialization
+- `start_conversation_as_initiator()` — verifies peer's SPK signature, runs
+  X3DH as sender, returns (RatchetState, x3dh_eph_public_key). Runs ONCE
+  per new conversation.
+- `start_conversation_as_receiver()` — runs X3DH as receiver using the
+  sender's ephemeral public key, returns RatchetState. Runs ONCE per
+  new conversation.
+- Does NOT handle ongoing message encryption/decryption — callers use
+  the returned RatchetState's own `.ratchet_encrypt()`/`.ratchet_decrypt()`
+  directly for every message after setup.
+
 ## ECC Module Structure
 `crypto/ecc/`
 
@@ -95,11 +114,15 @@ The project now implements the Double Ratchet Algorithm on top of the X3DH hands
 - `handshake.py`
 - `key_exchange.py`
 - `storage.py`
+- `ratchet.py`
 
 ## AES-GCM Module
 `crypto/aesgcm/`
-- Encryption worker
-- Decryption worker
+
+- `aesgcm_encrypt.py`
+- `aesgcm_decrypt.py`
+- `validators.py`
+- `exceptions.py`
 
 ---
 
@@ -113,8 +136,8 @@ Planned protocol components include:
 - ✅ One-Time Pre Keys (OTK)
 - ✅ X3DH key agreement
 - ✅ Double Ratchet Algorithm
-  - Diffie-Hellman ratchet (forward secrecy)
-  - Symmetric-key ratchet (break-in recovery)
+  - ✅Diffie-Hellman ratchet (forward secrecy)
+  - ✅Symmetric-key ratchet (break-in recovery)
 - Asynchronous session establishment
 - Encrypted message envelope relay
 
@@ -124,11 +147,12 @@ Planned protocol components include:
 
 
 ## In Progress
-
+- Flask API design (endpoints, request/response envelope shape)
 
 ## Planned
 - Client-to-client encrypted handshake via Flask
 - Encrypted envelope relay system
+- RatchetState persistence layer (storage/serialization strategy TBD)
 
 ---
 
