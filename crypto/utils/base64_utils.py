@@ -1,10 +1,11 @@
 import base64
+import secrets
+
+def generate_nonce() -> bytes:
+    return secrets.token_bytes(12)  
 
 def b64_encode(data : bytes) -> str:
-    # Encode bytes to a URL-safe base64 string without padding
-    return base64.urlsafe_b64encode(data).decode('utf-8').strip("=")
+    return base64.b64encode(data).decode('utf-8').rstrip("=")
 
 def b64_decode(data: str) -> bytes:
-    # Add padding if necessary and decode the URL-safe base64 string back to bytes
-    pad = "=" * ((4 - len(data) % 4) % 4)
-    return base64.urlsafe_b64decode(data + pad)
+    return base64.b64decode(data + "=" * (-len(data) % 4))
