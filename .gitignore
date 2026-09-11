@@ -2,5 +2,8 @@
 __pycache__/
 *.pyc
 venv/
+.venv/
 *.log
-keys/*.pem
+keys/
+*.pem
+.pytest_cache/
