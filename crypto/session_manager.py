@@ -7,6 +7,7 @@ from .ecc.serialization import public_key_to_pem
 def start_conversation_as_initiator(
     alice_identity_private_key,
     bob_identity_public_key,
+    bob_spk_id,
     bob_spk_public_key,
     bob_spk_signature,
     bob_otk_public_key=None,
@@ -26,6 +27,7 @@ def start_conversation_as_initiator(
 
     if not verify_spk_signature(
         bob_identity_public_key, 
+        bob_spk_id,
         public_key_to_pem(bob_spk_public_key), 
         bob_spk_signature):
         raise ValueError("SPK signature verification failed.")
