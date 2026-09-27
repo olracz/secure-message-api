@@ -25,6 +25,12 @@ def _make_crypto_service():
     cs.initialize_identity()
     return cs
 
+def _make_initialized_crypto_service():
+    """Helper — create, initialize identity and pre-keys."""
+    cs = _make_crypto_service()
+    cs.initialize_pre_keys()
+    return cs
+
 
 # ──────────────────────────────────────────────
 # IDENTITY
@@ -63,7 +69,6 @@ def test_initialize_identity_loads_existing_keys():
 
 def test_initialize_pre_keys_raises_without_identity():
     cs = CryptoService(key_dir=TEST_KEYS_DIR)
-
     with pytest.raises(RuntimeError):
         cs.initialize_pre_keys()
 
@@ -73,7 +78,7 @@ def test_initialize_pre_keys_generates_spk():
     cs.initialize_pre_keys()
 
     assert cs.spk is not None
-    assert cs.spk["pre_key_id"] == cs.spk_id
+    assert cs.spk["spk_id"] == cs.spk_id
     assert os.path.exists(os.path.join(TEST_KEYS_DIR, f"spk_{cs.spk_id}_private.pem"))
     assert os.path.exists(os.path.join(TEST_KEYS_DIR, f"spk_{cs.spk_id}_public.pem"))
 
@@ -104,13 +109,11 @@ def test_initialize_pre_keys_skips_otk_if_pool_exists():
     cs = _make_crypto_service()
     cs.initialize_pre_keys()
 
-    first_otks = cs.get_available_otks()
-    first_ids = [otk["otk_id"] for otk in first_otks]
+    first_ids = [otk["otk_id"] for otk in cs.get_available_otks()]
 
     # Second call — should not generate new OTKs
     cs.initialize_pre_keys()
-    second_otks = cs.get_available_otks()
-    second_ids = [otk["otk_id"] for otk in second_otks]
+    second_ids = [otk["otk_id"] for otk in cs.get_available_otks()]
 
     assert first_ids == second_ids
 
@@ -120,20 +123,15 @@ def test_initialize_pre_keys_skips_otk_if_pool_exists():
 # ──────────────────────────────────────────────
 
 def test_get_available_otks_returns_full_batch():
-    cs = _make_crypto_service()
-    cs.initialize_pre_keys()
-
-    available = cs.get_available_otks()
-    assert len(available) == 100
+    cs = _make_initialized_crypto_service()
+    assert len(cs.get_available_otks()) == 100
 
 
 def test_consume_otk_removes_it():
-    cs = _make_crypto_service()
-    cs.initialize_pre_keys()
+    cs = _make_initialized_crypto_service()
 
     first_otk = cs.get_available_otks()[0]
     otk_id = first_otk["otk_id"]
-
     cs.consume_otk(otk_id)
 
     remaining = cs.get_available_otks()
@@ -141,8 +139,7 @@ def test_consume_otk_removes_it():
 
 
 def test_consume_otk_replenishes_when_below_threshold():
-    cs = _make_crypto_service()
-    cs.initialize_pre_keys()
+    cs = _make_initialized_crypto_service()
 
     # Consume enough OTKs to drop below threshold (20)
     otks = cs.get_available_otks()
@@ -155,8 +152,7 @@ def test_consume_otk_replenishes_when_below_threshold():
 
 
 def test_replenish_otks_adds_new_batch():
-    cs = _make_crypto_service()
-    cs.initialize_pre_keys()
+    cs = _make_initialized_crypto_service()
 
     before = len(cs.get_available_otks())
     cs.replenish_otks()
@@ -166,62 +162,90 @@ def test_replenish_otks_adds_new_batch():
 
 
 def test_replenish_otks_no_id_collisions():
-    cs = _make_crypto_service()
-    cs.initialize_pre_keys()
-
+    cs = _make_initialized_crypto_service()
     cs.replenish_otks()
 
-    all_otks = cs.get_available_otks()
-    all_ids = [otk["otk_id"] for otk in all_otks]
-
+    all_ids = [otk["otk_id"] for otk in cs.get_available_otks()]
     # All IDs must be unique
     assert len(all_ids) == len(set(all_ids))
 
 
 # ──────────────────────────────────────────────
-# AUTHENTICATION
+# PREKEY BUNDLE ASSEMBLY
 # ──────────────────────────────────────────────
 
-def test_sign_authentication_proof_raises_without_identity():
+def test_get_prekey_bundle_raises_without_initialization():
     cs = CryptoService(key_dir=TEST_KEYS_DIR)
 
     with pytest.raises(RuntimeError):
-        cs.sign_authentication_proof("a3f9bc12")
+        cs.get_prekey_bundle()
 
 
-def test_sign_authentication_proof_returns_valid_signature():
+def test_get_pre_key_bundle_raises_without_pre_keys():
     cs = _make_crypto_service()
 
-    challenge = "a3f9bc12"
-    signature = cs.sign_authentication_proof(challenge)
-
-    # Verify the signature using the identity public key
-    try:
-        cs.public_key.verify(
-            signature,
-            challenge.encode(),
-            ec.ECDSA(hashes.SHA256())
-        )
-    except InvalidSignature:
-        pytest.fail("Authentication signature verification failed")
+    with pytest.raises(RuntimeError):
+        cs.get_prekey_bundle()
 
 
-def test_verify_authentication_proof_valid_signature():
-    cs = _make_crypto_service()
+def test_prekey_bundle_contains_expected_fields():
+    cs = _make_initialized_crypto_service()
+    bundle = cs.get_prekey_bundle()
 
-    challenge = "a3f9bc12"
-    signature = cs.sign_authentication_proof(challenge)
+    assert "identity_public_key" in bundle
+    assert "signed_pre_key_id" in bundle
+    assert "signed_pre_key" in bundle
+    assert "signed_pre_key_signature" in bundle
+    assert "one_time_pre_key_id" in bundle
+    assert "one_time_pre_key" in bundle
 
-    result = cs.verify_authentication_proof(cs.public_key, signature, challenge)
-    assert result is True
+
+def test_get_prekey_bundle_consumes_otk():
+    cs = _make_initialized_crypto_service()
+
+    before = len(cs.get_available_otks())
+    bundle = cs.get_prekey_bundle()
+    after = len(cs.get_available_otks())
+
+    # One OTK should have been consumed
+    assert after == before - 1
+    # Consumed OTK ID should no longer be in pool
+    remaining_ids = [otk["otk_id"] for otk in cs.get_available_otks()]
+    assert bundle["one_time_pre_key_id"] not in remaining_ids
 
 
-def test_verify_authentication_proof_tampered_challenge():
-    cs = _make_crypto_service()
+def test_get_prekey_bundle_without_otk_returns_none_for_otk_fields():
+    cs = _make_initialized_crypto_service()
 
-    challenge = "a3f9bc12"
-    signature = cs.sign_authentication_proof(challenge)
+    # Consume all OTKs
+    otks = cs.get_available_otks()
+    for otk in otks:
+        cs.consume_otk(otk["otk_id"])
 
-    # Verify against a different challenge — should fail
-    result = cs.verify_authentication_proof(cs.public_key, signature, "tampered999")
-    assert result is False
+    # Manually prevent auto-replenishment for this test
+    cs.otk_replenish_threshold = 0
+
+    # Consume until truly empty
+    remaining = cs.get_available_otks()
+    for otk in remaining:
+        delete_one_time_pre_key = otk["otk_id"]
+        cs.consume_otk(delete_one_time_pre_key)
+
+    bundle = cs.get_prekey_bundle()
+
+    assert bundle["one_time_pre_key_id"] is None
+    assert bundle["one_time_pre_key"] is None  
+
+
+def test_get_prekey_bundle_identity_key_matches_service_public_key():
+    cs = _make_initialized_crypto_service()
+    bundle = cs.get_prekey_bundle()
+
+    assert bundle["identity_public_key"] == public_key_to_pem(cs.public_key)
+
+
+def test_get_prekey_bundle_spk_id_matches_service_spk_id():
+    cs = _make_initialized_crypto_service()
+    bundle = cs.get_prekey_bundle()
+
+    assert bundle["signed_pre_key_id"] == cs.spk_id
