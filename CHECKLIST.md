@@ -19,8 +19,7 @@
 - [x] crypto_service.py — get_available_otks()
 - [x] crypto_service.py — consume_otk(otk_id)
 - [x] crypto_service.py — replenish_otks()
-- [x] crypto_service.py — sign_authentication_proof()
-- [x] crypto_service.py — verify_authentication_proof()
+- [x] crypto_service.py — get_prekey_bundle()
 - [x] test_crypto_service.py — full test coverage
 
 ## Phase 4 — X3DH Handshake
@@ -45,9 +44,6 @@
 - [x] session_manager.py — start_conversation_as_receiver()
 - [x] test_session_manager.py — full coverage including round trip tests
 - [x] _spk_signing_payload() — canonical payload binding ID to public PEM
-- [ ] ratchet_persistence.py — serialize/deserialize RatchetState
-- [ ] ratchet_persistence.py — encrypted local storage for session state
-- [ ] test_ratchet_persistence.py
 
 ## AES-GCM Validation Layer
 - [x] exceptions.py — custom exception hierarchy
@@ -65,8 +61,7 @@
 ## Auth Layer
 - [x] auth.py — sign_challenge()
 - [x] auth.py — verify_challenge_signature()
-- [ ] test_auth.py — (test tomorrow alongside other changes)
-- [ ] Phase 6 — wire into FastAPI /auth endpoints
+- [ ] test_auth.py — auth testing
 
 ## Phase 6 — Flask API
 - [ ] server setup — Flask app factory

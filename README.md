@@ -30,6 +30,7 @@ The project now implements the Double Ratchet Algorithm on top of the X3DH hands
   - Canonical signing payload binds pre_key_id to public PEM — prevents ID-swapping attacks
   - Persistent PEM storage with key ID (`spk_<id>_private.pem` / `spk_<id>_public.pem`)
   - Loading of SPK by ID
+
 - **One-Time Pre-Keys (OTK)**
   - Batch generation with sequential IDs and configurable `start_id` for pool replenishment
   - Persistent PEM storage per key (`otk_<id>_private.pem` / `otk_<id>_public.pem`)
@@ -42,8 +43,7 @@ The project now implements the Double Ratchet Algorithm on top of the X3DH hands
 - `get_available_otks()` — check remaining OTK pool
 - `consume_otk(otk_id)` — hard delete after session use with auto-replenishment
 - `replenish_otks()` — manual OTK pool top up
-- `sign_authentication_proof()` — ECDSA challenge signing for server authentication
-- `verify_authentication_proof()` — signature verification
+- `get_prekey_bundle()` — assemble publishable pre-key bundle with PEM bytes
 
 ### 🤝 X3DH Key Agreement
 - `perform_ecdh()` — single raw ECDH primitive, reused for all DH1-DH4 operations
@@ -66,6 +66,10 @@ The project now implements the Double Ratchet Algorithm on top of the X3DH hands
 - `session_manager.py` — bridges X3DH handshake and Double Ratchet:
   performs the one-time handshake setup and hands back a ready-to-use
   RatchetState for the conversation
+
+### 🔐 Auth Layer
+- `sign_challenge()` — signs server challenge with identity private key
+- `verify_challenge_signature()` — verifies signed challenge against identity public key
 
 ### 🔐 Cryptographic Primitives
 - ECC (P-256)
