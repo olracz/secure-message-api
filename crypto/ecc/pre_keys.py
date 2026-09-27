@@ -5,23 +5,23 @@ from .signatures import sign_data
 import os
 
 
-def _spk_signing_payload(pre_key_id: int, pre_public_pem: bytes) -> bytes:
+def _spk_signing_payload(spk_id: int, pre_public_pem: bytes) -> bytes:
     """Canonical bytes that get signed/verified for an SPK. 
     Binds the ID to the key so a swapped ID invalidates the signature."""
-    return pre_key_id.to_bytes(4, "big") + pre_public_pem
+    return spk_id.to_bytes(4, "big") + pre_public_pem
 
 
-def generate_signed_pre_key(identity_private_key, pre_key_id):
+def generate_signed_pre_key(identity_private_key, spk_id):
     """Generate a new ECC key-pair and sign the pair with the identity key."""
     pre_private_key, pre_public_key = generate_key_pair()
     pre_public_pem = public_key_to_pem(pre_public_key)
 
-    payload = _spk_signing_payload(pre_key_id, pre_public_pem)
+    payload = _spk_signing_payload(spk_id, pre_public_pem)
 
     signature = sign_data(identity_private_key, payload)
 
     return {
-        "pre_key_id": pre_key_id,
+        "spk_id": spk_id,
         "pre_private_key": pre_private_key,
         "pre_public_key": pre_public_key,
         "pre_public_pem": pre_public_pem,
@@ -35,7 +35,7 @@ def store_signed_pre_key(signed_pre_key, directory="keys"):
     Filenames: spk_<id>_private.pem / spk_<id>_public.pem
     """
     os.makedirs(directory, exist_ok=True)
-    key_id = signed_pre_key["pre_key_id"]   
+    key_id = signed_pre_key["spk_id"]   
 
     private_pem = private_key_to_pem(signed_pre_key["pre_private_key"])
     public_pem = signed_pre_key["pre_public_pem"]
@@ -44,16 +44,16 @@ def store_signed_pre_key(signed_pre_key, directory="keys"):
     save_key_to_file(public_pem, os.path.join(directory, f"spk_{key_id}_public.pem"))
     
 
-def load_signed_pre_key(pre_key_id, directory="keys"):
+def load_signed_pre_key(spk_id, directory="keys"):
     """
     Load SPK private and public keys by ID.
     Returns a dict with the loaded key objects.
     """
-    private_pem = load_key_from_file(os.path.join(directory, f"spk_{pre_key_id}_private.pem"))
-    public_pem = load_key_from_file(os.path.join(directory, f"spk_{pre_key_id}_public.pem"))
+    private_pem = load_key_from_file(os.path.join(directory, f"spk_{spk_id}_private.pem"))
+    public_pem = load_key_from_file(os.path.join(directory, f"spk_{spk_id}_public.pem"))
 
     return {
-        "pre_key_id": pre_key_id,
+        "spk_id": spk_id,
         "pre_private_key": pem_to_key(private_pem, private=True),
         "pre_public_key": pem_to_key(public_pem, private=False),
         "pre_public_pem": public_pem,
