@@ -1,6 +1,7 @@
 from .key_exchange import perform_ecdh
 from .key_generation import generate_key_pair
 from .signatures import verify_data
+from .pre_keys import _spk_signing_payload
 
 def x3dh_sender(my_private_key, peer_identity_public_key, peer_spk_public_key, 
 		peer_otk_public_key =None) -> tuple[list[bytes], object]:
@@ -81,7 +82,7 @@ def x3dh_receiver(my_spk_private_key, my_identity_private_key, peer_identity_pub
 	return secret_list
 
 
-def verify_spk_signature(identity_public_key, spk_public_pem, signature) -> bool:
+def verify_spk_signature(identity_public_key, pre_key_id, spk_public_pem, signature) -> bool:
     """
     Verify that spk_public_pem was actually signed by the holder of
     identity_public_key's matching private key.
@@ -91,4 +92,5 @@ def verify_spk_signature(identity_public_key, spk_public_pem, signature) -> bool
     or passing the raw key object instead of PEM bytes will cause
     verification to fail even for a legitimate SPK.
     """
-    return verify_data(identity_public_key, signature, spk_public_pem)
+    payload = _spk_signing_payload(pre_key_id, spk_public_pem)
+    return verify_data(identity_public_key, signature, payload)
