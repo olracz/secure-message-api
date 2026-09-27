@@ -44,6 +44,10 @@
 - [x] session_manager.py — start_conversation_as_initiator()
 - [x] session_manager.py — start_conversation_as_receiver()
 - [x] test_session_manager.py — full coverage including round trip tests
+- [x] _spk_signing_payload() — canonical payload binding ID to public PEM
+- [ ] ratchet_persistence.py — serialize/deserialize RatchetState
+- [ ] ratchet_persistence.py — encrypted local storage for session state
+- [ ] test_ratchet_persistence.py
 
 ## AES-GCM Validation Layer
 - [x] exceptions.py — custom exception hierarchy

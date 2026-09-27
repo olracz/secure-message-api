@@ -27,6 +27,7 @@ The project now implements the Double Ratchet Algorithm on top of the X3DH hands
 - **Signed Pre-Key (SPK)**
   - ECC key pair generation per pre-key
   - ECDSA signing of SPK public key using identity private key
+  - Canonical signing payload binds pre_key_id to public PEM — prevents ID-swapping attacks
   - Persistent PEM storage with key ID (`spk_<id>_private.pem` / `spk_<id>_public.pem`)
   - Loading of SPK by ID
 - **One-Time Pre-Keys (OTK)**
