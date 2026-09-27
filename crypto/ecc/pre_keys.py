@@ -1,9 +1,14 @@
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import hashes
 from .key_generation import generate_key_pair
 from .storage import save_key_to_file, load_key_from_file
 from .serialization import private_key_to_pem, public_key_to_pem, pem_to_key
+from .signatures import sign_data
 import os
+
+
+def _spk_signing_payload(pre_key_id: int, pre_public_pem: bytes) -> bytes:
+    """Canonical bytes that get signed/verified for an SPK. 
+    Binds the ID to the key so a swapped ID invalidates the signature."""
+    return pre_key_id.to_bytes(4, "big") + pre_public_pem
 
 
 def generate_signed_pre_key(identity_private_key, pre_key_id):
@@ -11,10 +16,9 @@ def generate_signed_pre_key(identity_private_key, pre_key_id):
     pre_private_key, pre_public_key = generate_key_pair()
     pre_public_pem = public_key_to_pem(pre_public_key)
 
-    signature = identity_private_key.sign(
-        pre_public_pem,
-        ec.ECDSA(hashes.SHA256())
-    )
+    payload = _spk_signing_payload(pre_key_id, pre_public_pem)
+
+    signature = sign_data(identity_private_key, payload)
 
     return {
         "pre_key_id": pre_key_id,
