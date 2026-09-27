@@ -10,9 +10,6 @@ from .ecc.pre_keys import (
     load_one_time_pre_keys,
     delete_one_time_pre_key,
 )
-from .ecc.signatures import sign_data, verify_data
-from .aesgcm.aesgcm_encrypt import encrypt
-from .aesgcm.aesgcm_decrypt import decrypt
 
 
 class CryptoService:
@@ -77,6 +74,7 @@ class CryptoService:
         if not available:
             self._generate_and_store_otk_batch()
 
+
     def _generate_and_store_otk_batch(self):
         """Internal — generate a fresh OTK batch starting from otk_start_id."""
         otks = generate_one_time_pre_keys(count=100, start_id=self.otk_start_id)
@@ -93,6 +91,7 @@ class CryptoService:
         """Return list of all remaining OTKs sorted by ID."""
         return load_one_time_pre_keys(directory=self.key_dir)
 
+
     def consume_otk(self, otk_id):
         """
         Hard delete an OTK after it has been used in a session.
@@ -105,22 +104,34 @@ class CryptoService:
         if len(remaining) < self.otk_replenish_threshold:
             self._generate_and_store_otk_batch()
 
+
     def replenish_otks(self):
         """Manually trigger OTK pool replenishment."""
         self._generate_and_store_otk_batch()
 
     # ──────────────────────────────────────────────
-    # AUTHENTICATION
+    # PREKEY BUNDLE ASSEMBLY
     # ──────────────────────────────────────────────
 
-    def sign_authentication_proof(self, challenge):
-        """Sign a challenge with the identity private key to prove ownership."""
-        if self.private_key is None:
-            raise RuntimeError(
-                "Identity keys not initialized. Call initialize_identity() first."
-            )
-        return sign_data(self.private_key, challenge.encode())
+    def get_prekey_bundle(self):
+        """
+        Assemble a publishable pre-key bundle: identity key, signed pre-key,
+        its signature, and one OTK (consumed on issue).
+        """
+        if self.private_key is None or self.spk is None:
+            raise RuntimeError("Identity/pre-keys not initialized.")
 
-    def verify_authentication_proof(self, public_key, signature, challenge):
-        """Verify a challenge signature against a given public key."""
-        return verify_data(public_key, signature, challenge.encode())
+        available_otks = self.get_available_otks()
+        otk = available_otks[0] if available_otks else None
+
+        if otk:
+            self.consume_otk(otk["key_id"])  # hard-delete immediately on issue
+
+        return {
+            "identity_key": self.public_key,
+            "signed_pre_key_id": self.spk.key_id,
+            "signed_pre_key": self.spk.public_key,
+            "signed_pre_key_signature": self.spk.signature,
+            "one_time_pre_key_id": otk["key_id"] if otk else None,
+            "one_time_pre_key": otk["public_key"] if otk else None,
+        }
