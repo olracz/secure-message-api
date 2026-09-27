@@ -62,6 +62,12 @@
 - [x] randomness.py — removed (consolidated into base64_utils.py)
 - [x] key_loader.py — removed (obsolete RSA loader)
 
+## Auth Layer
+- [x] auth.py — sign_challenge()
+- [x] auth.py — verify_challenge_signature()
+- [ ] test_auth.py — (test tomorrow alongside other changes)
+- [ ] Phase 6 — wire into FastAPI /auth endpoints
+
 ## Phase 6 — Flask API
 - [ ] server setup — Flask app factory
 - [ ] POST /register — upload pre-key bundle
