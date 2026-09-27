@@ -1,5 +1,5 @@
 import os
-
+from .ecc.serialization import public_key_to_pem
 from .ecc.identity_keys import create_and_store_identity_keys, load_identity_keys
 from .ecc.pre_keys import (
     generate_signed_pre_key,
@@ -115,23 +115,33 @@ class CryptoService:
 
     def get_prekey_bundle(self):
         """
-        Assemble a publishable pre-key bundle: identity key, signed pre-key,
-        its signature, and one OTK (consumed on issue).
+        Assemble a publishable pre-key bundle for upload to the server.
+        Contains identity key, signed pre-key, its signature, and one OTK.
+        The OTK is hard-deleted immediately on issue — single use only.
+
+        Returns:
+            dict with PEM bytes for all public keys, ready for JSON serialization.
+
+        Raises:
+            RuntimeError: If identity or pre-keys are not initialized.
         """
         if self.private_key is None or self.spk is None:
-            raise RuntimeError("Identity/pre-keys not initialized.")
+            raise RuntimeError(
+                "Identity and pre-keys not initialized. "
+                "Call initialize_identity() and initialize_pre_keys() first."
+            )
 
         available_otks = self.get_available_otks()
         otk = available_otks[0] if available_otks else None
 
         if otk:
-            self.consume_otk(otk["key_id"])  # hard-delete immediately on issue
+            self.consume_otk(otk["otk_id"]) 
 
         return {
-            "identity_key": self.public_key,
-            "signed_pre_key_id": self.spk.key_id,
-            "signed_pre_key": self.spk.public_key,
-            "signed_pre_key_signature": self.spk.signature,
-            "one_time_pre_key_id": otk["key_id"] if otk else None,
-            "one_time_pre_key": otk["public_key"] if otk else None,
+            "identity_public_key":      public_key_to_pem(self.public_key),
+            "signed_pre_key_id":        self.spk["spk_id"],
+            "signed_pre_key":           self.spk["pre_public_pem"],
+            "signed_pre_key_signature": self.spk["signature"],
+            "one_time_pre_key_id":      otk["otk_id"] if otk else None,
+            "one_time_pre_key":         otk["public_pem"] if otk else None,
         }
