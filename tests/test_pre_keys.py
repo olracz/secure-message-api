@@ -4,10 +4,10 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import hashes
 from cryptography.exceptions import InvalidSignature
-
 from crypto.ecc.identity_keys import create_and_store_identity_keys
 from crypto.ecc.serialization import public_key_to_pem
 from crypto.ecc.pre_keys import (
+    _spk_signing_payload,
     generate_signed_pre_key,
     store_signed_pre_key,
     load_signed_pre_key,
@@ -41,9 +41,9 @@ def _make_identity_keys():
 
 def test_generate_signed_pre_key_returns_expected_fields():
     private_key, _ = _make_identity_keys()
-    spk = generate_signed_pre_key(private_key, pre_key_id=1)
+    spk = generate_signed_pre_key(private_key, 1)
 
-    assert spk["pre_key_id"] == 1
+    assert spk["spk_id"] == 1
     assert spk["pre_private_key"] is not None
     assert spk["pre_public_key"] is not None
     assert spk["pre_public_pem"] is not None
@@ -52,13 +52,14 @@ def test_generate_signed_pre_key_returns_expected_fields():
 
 def test_generate_signed_pre_key_signature_is_valid():
     private_key, public_key = _make_identity_keys()
-    spk = generate_signed_pre_key(private_key, pre_key_id=1)
+    spk = generate_signed_pre_key(private_key, 1)
 
+    expected_payload = _spk_signing_payload(spk["spk_id"], spk["pre_public_pem"])
     # Signature must verify against the identity public key
     try:
         public_key.verify(
             spk["signature"],
-            spk["pre_public_pem"],
+            expected_payload,
             ec.ECDSA(hashes.SHA256())
         )
     except InvalidSignature:
@@ -67,7 +68,7 @@ def test_generate_signed_pre_key_signature_is_valid():
 
 def test_generate_signed_pre_key_signature_fails_if_tampered():
     private_key, public_key = _make_identity_keys()
-    spk = generate_signed_pre_key(private_key, pre_key_id=1)
+    spk = generate_signed_pre_key(private_key, 1)
 
     # Tamper the public PEM
     tampered_pem = spk["pre_public_pem"][:-4] + b"XXXX"
@@ -82,7 +83,7 @@ def test_generate_signed_pre_key_signature_fails_if_tampered():
 
 def test_store_signed_pre_key_files_exist_with_content():
     private_key, _ = _make_identity_keys()
-    spk = generate_signed_pre_key(private_key, pre_key_id=1)
+    spk = generate_signed_pre_key(private_key, 1)
     store_signed_pre_key(spk, directory=TEST_KEYS_DIR)
 
     assert os.path.exists(os.path.join(TEST_KEYS_DIR, "spk_1_private.pem"))
@@ -94,12 +95,12 @@ def test_store_signed_pre_key_files_exist_with_content():
 
 def test_store_and_load_signed_pre_key_matches_original():
     private_key, _ = _make_identity_keys()
-    spk = generate_signed_pre_key(private_key, pre_key_id=1)
+    spk = generate_signed_pre_key(private_key, 1)
     store_signed_pre_key(spk, directory=TEST_KEYS_DIR)
 
-    loaded = load_signed_pre_key(pre_key_id=1, directory=TEST_KEYS_DIR)
+    loaded = load_signed_pre_key(spk_id=1, directory=TEST_KEYS_DIR)
 
-    assert loaded["pre_key_id"] == spk["pre_key_id"]
+    assert loaded["spk_id"] == spk["spk_id"]
     assert public_key_to_pem(loaded["pre_public_key"]) == spk["pre_public_pem"]
 
 
