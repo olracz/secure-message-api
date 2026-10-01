@@ -7,3 +7,4 @@ venv/
 keys/
 *.pem
 .pytest_cache/
+*.pyc
