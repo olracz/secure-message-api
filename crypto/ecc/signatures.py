@@ -1,5 +1,4 @@
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import utils
 from cryptography.hazmat.primitives.asymmetric import ec
 
 # ECC P-256 signing and verification
