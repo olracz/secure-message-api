@@ -1,6 +1,6 @@
 import pytest
-import secrets
 from crypto.ecc.key_generation import generate_key_pair
+from crypto.ecc.pre_keys import _spk_signing_payload
 from crypto.ecc.serialization import public_key_to_pem
 from crypto.ecc.signatures import sign_data
 from crypto.session_manager import (
@@ -9,18 +9,23 @@ from crypto.session_manager import (
 )
 from crypto.ecc.ratchet import RatchetState
 
+BOB_SPK_ID = 1 
 
 def _make_bob_bundle(with_otk=True):
     """Helper — generate a full Bob pre-key bundle."""
+    
     bob_identity_private, bob_identity_public = generate_key_pair()
     bob_spk_private, bob_spk_public = generate_key_pair()
-    bob_spk_signature = sign_data(bob_identity_private, public_key_to_pem(bob_spk_public))
+    spk_public_pem = public_key_to_pem(bob_spk_public)
+    spk_payload = _spk_signing_payload(BOB_SPK_ID, spk_public_pem)
+    bob_spk_signature = sign_data(bob_identity_private, spk_payload)
 
     otk_private, otk_public = (generate_key_pair() if with_otk else (None, None))
 
     return {
         "bob_identity_private": bob_identity_private,
         "bob_identity_public": bob_identity_public,
+        "bob_spk_id": BOB_SPK_ID,
         "bob_spk_private": bob_spk_private,
         "bob_spk_public": bob_spk_public,
         "bob_spk_signature": bob_spk_signature,
@@ -46,6 +51,7 @@ def test_initiator_returns_ratchet_state_and_eph_key_with_otk():
     ratchet_state, eph_public_key = start_conversation_as_initiator(
         alice_private,
         bundle["bob_identity_public"],
+        bundle["bob_spk_id"],
         bundle["bob_spk_public"],
         bundle["bob_spk_signature"],
         bundle["bob_otk_public"],
@@ -62,6 +68,7 @@ def test_initiator_returns_ratchet_state_and_eph_key_without_otk():
     ratchet_state, eph_public_key = start_conversation_as_initiator(
         alice_private,
         bundle["bob_identity_public"],
+        bundle["bob_spk_id"],
         bundle["bob_spk_public"],
         bundle["bob_spk_signature"],
     )
@@ -81,6 +88,7 @@ def test_initiator_raises_if_spk_signature_invalid():
         start_conversation_as_initiator(
             alice_private,
             bundle["bob_identity_public"],
+            bundle["bob_spk_id"],
             bundle["bob_spk_public"],
             tampered_signature,
             bundle["bob_otk_public"],
@@ -98,6 +106,7 @@ def test_receiver_returns_ratchet_state_with_otk():
     _, eph_public_key = start_conversation_as_initiator(
         alice_private,
         bundle["bob_identity_public"],
+        bundle["bob_spk_id"],
         bundle["bob_spk_public"],
         bundle["bob_spk_signature"],
         bundle["bob_otk_public"],
@@ -122,6 +131,7 @@ def test_receiver_returns_ratchet_state_without_otk():
     _, eph_public_key = start_conversation_as_initiator(
         alice_private,
         bundle["bob_identity_public"],
+        bundle["bob_spk_id"],
         bundle["bob_spk_public"],
         bundle["bob_spk_signature"],
     )
@@ -148,6 +158,7 @@ def test_initiator_and_receiver_agree_with_otk():
     alice_ratchet, eph_public_key = start_conversation_as_initiator(
         alice_private,
         bundle["bob_identity_public"],
+        bundle["bob_spk_id"],
         bundle["bob_spk_public"],
         bundle["bob_spk_signature"],
         bundle["bob_otk_public"],
@@ -177,6 +188,7 @@ def test_initiator_and_receiver_agree_without_otk():
     alice_ratchet, eph_public_key = start_conversation_as_initiator(
         alice_private,
         bundle["bob_identity_public"],
+        bundle["bob_spk_id"],
         bundle["bob_spk_public"],
         bundle["bob_spk_signature"],
     )
@@ -203,6 +215,7 @@ def test_full_conversation_round_trip():
     alice_ratchet, eph_public_key = start_conversation_as_initiator(
         alice_private,
         bundle["bob_identity_public"],
+        bundle["bob_spk_id"],
         bundle["bob_spk_public"],
         bundle["bob_spk_signature"],
         bundle["bob_otk_public"],
