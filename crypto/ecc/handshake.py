@@ -82,7 +82,7 @@ def x3dh_receiver(my_spk_private_key, my_identity_private_key, peer_identity_pub
 	return secret_list
 
 
-def verify_spk_signature(identity_public_key, pre_key_id, spk_public_pem, signature) -> bool:
+def verify_spk_signature(identity_public_key, spk_id, spk_public_pem, signature) -> bool:
     """
     Verify that spk_public_pem was actually signed by the holder of
     identity_public_key's matching private key.
@@ -92,5 +92,5 @@ def verify_spk_signature(identity_public_key, pre_key_id, spk_public_pem, signat
     or passing the raw key object instead of PEM bytes will cause
     verification to fail even for a legitimate SPK.
     """
-    payload = _spk_signing_payload(pre_key_id, spk_public_pem)
+    payload = _spk_signing_payload(spk_id, spk_public_pem)
     return verify_data(identity_public_key, signature, payload)
