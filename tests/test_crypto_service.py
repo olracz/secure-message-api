@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.exceptions import InvalidSignature
 
 from crypto.crypto_service import CryptoService
-from crypto.ecc.serialization import public_key_to_pem
+from crypto.ecc.serialization import public_key_to_pem, public_key_to_pem_str
 
 TEST_KEYS_DIR = "./test_keys/"
 
@@ -178,41 +178,36 @@ def test_get_prekey_bundle_raises_without_initialization():
     cs = CryptoService(key_dir=TEST_KEYS_DIR)
 
     with pytest.raises(RuntimeError):
-        cs.get_prekey_bundle()
+        cs.assemble_prekey_bundle()
 
 
 def test_get_pre_key_bundle_raises_without_pre_keys():
     cs = _make_crypto_service()
 
     with pytest.raises(RuntimeError):
-        cs.get_prekey_bundle()
+        cs.assemble_prekey_bundle()
 
 
 def test_prekey_bundle_contains_expected_fields():
     cs = _make_initialized_crypto_service()
-    bundle = cs.get_prekey_bundle()
+    bundle = cs.assemble_prekey_bundle()
 
     assert "identity_public_key" in bundle
     assert "signed_pre_key_id" in bundle
     assert "signed_pre_key" in bundle
     assert "signed_pre_key_signature" in bundle
-    assert "one_time_pre_key_id" in bundle
-    assert "one_time_pre_key" in bundle
+    assert "one_time_pre_keys" in bundle
 
 
-def test_get_prekey_bundle_consumes_otk():
+def test_get_prekey_bundle_does_not_consume_otks():
     cs = _make_initialized_crypto_service()
 
     before = len(cs.get_available_otks())
-    bundle = cs.get_prekey_bundle()
+    bundle = cs.assemble_prekey_bundle()
     after = len(cs.get_available_otks())
 
-    # One OTK should have been consumed
-    assert after == before - 1
-    # Consumed OTK ID should no longer be in pool
-    remaining_ids = [otk["otk_id"] for otk in cs.get_available_otks()]
-    assert bundle["one_time_pre_key_id"] not in remaining_ids
-
+    assert after == before 
+    
 
 def test_get_prekey_bundle_without_otk_returns_none_for_otk_fields():
     cs = _make_initialized_crypto_service()
@@ -231,21 +226,19 @@ def test_get_prekey_bundle_without_otk_returns_none_for_otk_fields():
         delete_one_time_pre_key = otk["otk_id"]
         cs.consume_otk(delete_one_time_pre_key)
 
-    bundle = cs.get_prekey_bundle()
+    bundle = cs.assemble_prekey_bundle()
 
-    assert bundle["one_time_pre_key_id"] is None
-    assert bundle["one_time_pre_key"] is None  
-
+    assert bundle["one_time_pre_keys"] == []
 
 def test_get_prekey_bundle_identity_key_matches_service_public_key():
     cs = _make_initialized_crypto_service()
-    bundle = cs.get_prekey_bundle()
+    bundle = cs.assemble_prekey_bundle()
 
-    assert bundle["identity_public_key"] == public_key_to_pem(cs.public_key)
+    assert bundle["identity_public_key"] == public_key_to_pem_str(cs.public_key)
 
 
 def test_get_prekey_bundle_spk_id_matches_service_spk_id():
     cs = _make_initialized_crypto_service()
-    bundle = cs.get_prekey_bundle()
+    bundle = cs.assemble_prekey_bundle()
 
     assert bundle["signed_pre_key_id"] == cs.spk_id
