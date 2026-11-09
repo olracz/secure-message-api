@@ -149,10 +149,11 @@ Planned protocol components include:
 ---
 
 # 📌 Current Development Focus
+- Docker containerization
 
 
 ## In Progress
-- Flask API design (endpoints, request/response envelope shape)
+- FastApi design (endpoints, request/response envelope shape)
 
 ## Planned
 - Client-to-client encrypted handshake via Flask
@@ -176,3 +177,5 @@ Planned protocol components include:
 - cryptography
 - pytest
 - FastApi
+- Docker
+- Postgres
